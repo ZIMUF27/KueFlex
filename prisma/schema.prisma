@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      String   @default("PATIENT")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Doctor-specific fields (null if not a doctor)
+  specialty String?
+  license   String?
+
+  // Relations
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+  doctorSchedules     Schedule[]
+
+  @@map("users")
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  date      DateTime
+  time      String
+  purpose   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patientId String
+  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id])
+
+  doctorId  String
+  doctor    User   @relation("DoctorAppointments", fields: [doctorId], references: [id])
+
+  @@map("appointments")
+}
+
+model Schedule {
+  id        String @id @default(uuid())
+  day       String // จันทร์, อังคาร, etc.
+  startTime String
+  endTime   String
+  maxSlots  Int    @default(6)
+
+  doctorId  String
+  doctor    User   @relation(fields: [doctorId], references: [id])
+
+  @@unique([doctorId, day])
+  @@map("schedules")
+}
+
+model SystemSetting {
+  id    String @id @default("system")
+  key   String @unique
+  value String
+
+  @@map("system_settings")
+}
