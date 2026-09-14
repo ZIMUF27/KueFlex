@@ -16,8 +16,15 @@ export async function GET(req) {
     if (searchParams.get('date')) where.date = new Date(searchParams.get('date'))
 
     const appointments = await prisma.appointment.findMany({
-        where,
-        include: { patient: { select: { id: true, name: true, email: true, phone: true } }, doctor: { select: { id: true, name: true, specialty: true } } },
+        where: {
+            ...where,
+            patient: { active: true },
+            doctor: { active: true },
+        },
+        include: {
+            patient: { select: { id: true, name: true, email: true, phone: true, active: true } },
+            doctor: { select: { id: true, name: true, specialty: true, active: true } },
+        },
         orderBy: { date: 'desc' },
     })
     return NextResponse.json(appointments)

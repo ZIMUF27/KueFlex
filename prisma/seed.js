@@ -10,7 +10,7 @@ async function main() {
 
     // --- Users ---
     const patients = await Promise.all([
-        prisma.user.upsert({ where: { email: 'poo2461p@gmail.com' }, update: {}, create: { email: 'poo2461p@gmail.com', password: hash('123456'), name: 'Poo', phone: '', role: 'PATIENT' } }),
+        prisma.user.upsert({ where: { email: 'poo2461p@gmail.com' }, update: { phone: '081-234-5678' }, create: { email: 'poo2461p@gmail.com', password: hash('123456'), name: 'Poo', phone: '081-234-5678', role: 'PATIENT' } }),
         prisma.user.upsert({ where: { email: 'somchai@mail.com' }, update: {}, create: { email: 'somchai@mail.com', password: hash('123456'), name: 'สมชาย ใจดี', phone: '081-111-1111', role: 'PATIENT' } }),
         prisma.user.upsert({ where: { email: 'somying@mail.com' }, update: {}, create: { email: 'somying@mail.com', password: hash('123456'), name: 'สมหญิง รักสุข', phone: '081-222-2222', role: 'PATIENT' } }),
         prisma.user.upsert({ where: { email: 'wichai@mail.com' }, update: {}, create: { email: 'wichai@mail.com', password: hash('123456'), name: 'วิชัย สุขสันต์', phone: '081-333-3333', role: 'PATIENT' } }),

@@ -7,13 +7,15 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const validate = () => {
     if (form.name.trim().length < 2) return 'กรุณากรอกชื่อ-นามสกุลอย่างน้อย 2 ตัวอักษร'
     if (!emailPattern.test(form.email)) return 'รูปแบบอีเมลไม่ถูกต้อง'
+    if (!form.phone.trim()) return 'กรุณากรอกเบอร์โทรศัพท์'
+    if (form.phone.trim().replace(/[^0-9]/g, '').length < 8) return 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง'
     if (form.password.length < 6) return 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร'
     return ''
   }
@@ -36,6 +38,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: form.name.trim(),
           email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
           password: form.password,
         }),
       })
@@ -89,6 +92,18 @@ export default function RegisterPage() {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="example@mail.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">เบอร์โทรศัพท์</label>
+            <input
+              type="tel"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="081-234-5678"
               required
             />
           </div>

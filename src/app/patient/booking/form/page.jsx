@@ -1,8 +1,12 @@
-export default function PatientBookingFormPage() {
+import PatientBookingForm from '@/components/PatientBookingForm'
+import { Suspense } from 'react'
+
+export default function PatientBookingFormPage({ searchParams }) {
+  const doctorId = searchParams?.doctorId || ''
+
   return (
-    <main style={{ padding: 40, fontFamily: 'Arial' }}>
-      <h1>Booking Form</h1>
-      <p>Welcome to KueFlex Booking Form.</p>
-    </main>
+    <Suspense fallback={<div className="p-8 text-center">กำลังโหลดฟอร์มจอง...</div>}>
+      <PatientBookingForm initialDoctorId={doctorId} />
+    </Suspense>
   )
 }

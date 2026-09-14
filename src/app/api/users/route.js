@@ -4,14 +4,27 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
-// GET /api/users
-export async function GET() {
+// GET /api/users?phoneMissing=true
+export async function GET(req) {
     const session = await getServerSession(authOptions)
     if (!session || session.user.role !== 'ADMIN') {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const { searchParams } = new URL(req.url)
+    const phoneMissingOnly = searchParams.get('phoneMissing') === 'true'
+
+    const where = phoneMissingOnly
+        ? {
+            OR: [
+                { phone: { equals: '' } },
+                { phone: null },
+            ],
+        }
+        : {}
+
     const users = await prisma.user.findMany({
+        where,
         select: { id: true, name: true, email: true, phone: true, role: true, active: true, specialty: true, license: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
     })
@@ -33,6 +46,7 @@ export async function POST(req) {
 
         const name = String(body.name || '').trim()
         const email = String(body.email || '').trim().toLowerCase()
+        const phone = String(body.phone || '').trim()
         const password = String(body.password || '')
 
         if (!name || name.length < 2) {
@@ -41,6 +55,10 @@ export async function POST(req) {
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return NextResponse.json({ error: 'รูปแบบอีเมลไม่ถูกต้อง' }, { status: 400 })
+        }
+
+        if (!phone || phone.replace(/[^0-9]/g, '').length < 8) {
+            return NextResponse.json({ error: 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง' }, { status: 400 })
         }
 
         if (password.length < 6) {
@@ -59,7 +77,7 @@ export async function POST(req) {
                 email,
                 password: passwordHash,
                 role: 'PATIENT',
-                phone: '',
+                phone,
                 active: true,
             },
         })
