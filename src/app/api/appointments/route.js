@@ -54,26 +54,59 @@ export async function POST(req) {
     return NextResponse.json(appointment, { status: 201 })
 }
 
-// PATCH /api/appointments (update status, reschedule)
+// PATCH /api/appointments (update status, reschedule, cancel)
 export async function PATCH(req) {
     const session = await getServerSession(authOptions)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { id, status, date, time } = body
+    const { id, status, date, time, notes } = body
+
+    if (!id) {
+        return NextResponse.json({ error: 'Appointment id is required' }, { status: 400 })
+    }
+
+    const existing = await prisma.appointment.findUnique({
+        where: { id },
+        include: { patient: { select: { id: true, name: true, role: true } }, doctor: { select: { id: true, name: true } } },
+    })
+
+    if (!existing) {
+        return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+    }
+
+    const currentRole = String(session.user.role || '').toUpperCase()
+
+    if (currentRole === 'PATIENT' && existing.patientId !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (currentRole === 'PATIENT' && status && String(status).toUpperCase() !== 'CANCELLED') {
+        return NextResponse.json({ error: 'Patient can only cancel appointments' }, { status: 403 })
+    }
+
+    if (String(status || '').toUpperCase() === 'CANCELLED') {
+        const reason = String(notes || '').trim()
+        if (!reason) {
+            return NextResponse.json({ error: 'กรุณากรอกหมายเหตุเพื่อยกเลิกการนัด' }, { status: 400 })
+        }
+    }
 
     const updateData = {}
-    if (status) updateData.status = status
+    if (status) updateData.status = String(status).toUpperCase()
     if (date) updateData.date = new Date(date)
     if (time) updateData.time = time
+    if (typeof notes === 'string') updateData.notes = notes.trim()
 
-    // If rescheduling, check slot availability
+    if (updateData.status === 'CANCELLED') {
+        updateData.notes = String(notes || '').trim() || existing.notes || 'ยกเลิกโดยผู้ป่วย'
+    }
+
     if (date && time) {
-        const apt = await prisma.appointment.findUnique({ where: { id } })
-        const existing = await prisma.appointment.findMany({
-            where: { doctorId: apt.doctorId, date: new Date(date), time, status: { notIn: ['CANCELLED'] }, id: { not: id } },
+        const existingSlots = await prisma.appointment.findMany({
+            where: { doctorId: existing.doctorId, date: new Date(date), time, status: { notIn: ['CANCELLED'] }, id: { not: id } },
         })
-        if (existing.length > 0) {
+        if (existingSlots.length > 0) {
             return NextResponse.json({ error: 'ช่วงเวลานี้ถูกจองแล้ว' }, { status: 400 })
         }
     }

@@ -209,6 +209,11 @@ export default function StaffPortalUI({ view = 'dashboard' }) {
                     <div>
                       <div className="font-black text-slate-900">{apt.patient?.name || 'ผู้ป่วย'} • {apt.doctor?.name || 'แพทย์'}</div>
                       <div className="text-sm text-slate-500">{apt.date} • {apt.time} • {apt.purpose || 'ตรวจรักษา'}</div>
+                      {(apt.status || '').toUpperCase() === 'CANCELLED' && apt.notes && (
+                        <div className="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                          หมายเหตุยกเลิก: {apt.notes}
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-cyan-700">{apt.status || 'PENDING'}</div>

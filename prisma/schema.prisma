@@ -36,6 +36,8 @@ model Appointment {
   time      String
   purpose   String
   status    String   @default("PENDING")
+  notes     String?  @default("")
+  staffId   String?  @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
