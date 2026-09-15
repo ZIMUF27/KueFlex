@@ -23,9 +23,10 @@ model User {
   license   String?
 
   // Relations
-  patientAppointments Appointment[] @relation("PatientAppointments")
-  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+  patientAppointments Appointment[]  @relation("PatientAppointments")
+  doctorAppointments  Appointment[]  @relation("DoctorAppointments")
   doctorSchedules     Schedule[]
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -44,10 +45,28 @@ model Appointment {
   patientId String
   patient   User   @relation("PatientAppointments", fields: [patientId], references: [id])
 
-  doctorId  String
-  doctor    User   @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  doctorId      String
+  doctor        User           @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  notifications Notification[]
 
   @@map("appointments")
+}
+
+model Notification {
+  id            String       @id @default(uuid())
+  title         String
+  message       String
+  type          String       @default("INFO")
+  readAt        DateTime?
+  createdAt     DateTime     @default(now())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([appointmentId])
+  @@map("notifications")
 }
 
 model Schedule {
@@ -57,8 +76,8 @@ model Schedule {
   endTime   String
   maxSlots  Int    @default(6)
 
-  doctorId  String
-  doctor    User   @relation(fields: [doctorId], references: [id])
+  doctorId String
+  doctor   User   @relation(fields: [doctorId], references: [id])
 
   @@unique([doctorId, day])
   @@map("schedules")

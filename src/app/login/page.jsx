@@ -2,7 +2,9 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, User, UserCog, Shield, Loader2 } from 'lucide-react'
+import { Stethoscope, User, UserCog, Shield, Loader2, AlertCircle } from 'lucide-react'
+
+const LOGIN_REDIRECT_DELAY_MS = 850
 
 const DEMO_ACCOUNTS = [
     { role: 'PATIENT', label: 'ผู้ป่วย', icon: User, color: 'border-cyan-500 bg-cyan-50', email: 'somchai@mail.com' },
@@ -35,8 +37,10 @@ export default function LoginPage() {
             setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
             setLoading(false)
         } else {
-            router.push(result?.url || '/')
-            router.refresh()
+            setTimeout(() => {
+                router.push(result?.url || '/')
+                router.refresh()
+            }, LOGIN_REDIRECT_DELAY_MS)
         }
     }
 
@@ -53,46 +57,42 @@ export default function LoginPage() {
             setError('เกิดข้อผิดพลาด กรุณาตรวจสอบว่าได้ seed ฐานข้อมูลแล้ว')
             setLoading(false)
         } else {
-            router.push(result?.url || '/')
-            router.refresh()
+            setTimeout(() => {
+                router.push(result?.url || '/')
+                router.refresh()
+            }, LOGIN_REDIRECT_DELAY_MS)
         }
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-700 via-cyan-600 to-cyan-400">
-            <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-700 via-cyan-600 to-cyan-400 px-4 py-8">
+            <div className="login-shell bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl min-h-[680px] flex flex-col justify-center">
                 <div className="text-center mb-2">
-                    <Stethoscope size={48} className="mx-auto text-cyan-600" />
+                    <Stethoscope size={56} className="mx-auto text-cyan-600" />
                 </div>
-                <h1 className="text-2xl font-bold text-center text-cyan-800">KueFlex</h1>
-                <p className="text-center text-gray-500 mb-6">ระบบจองนัดพบแพทย์</p>
-
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">
-                        {error}
-                    </div>
-                )}
+                <h1 className="text-4xl font-bold text-center text-cyan-800">KueFlex</h1>
+                <p className="text-center text-gray-500 mb-6 text-lg">ระบบจองนัดพบแพทย์</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-semibold mb-1">อีเมล</label>
-                        <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                        <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-lg"
                             value={email} onChange={e => setEmail(e.target.value)} placeholder="กรอกอีเมล" required />
                     </div>
                     <div>
                         <label className="block text-sm font-semibold mb-1">รหัสผ่าน</label>
-                        <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                        <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-lg"
                             value={password} onChange={e => setPassword(e.target.value)} placeholder="กรอกรหัสผ่าน" required />
                     </div>
                     <button type="submit" disabled={loading}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2">
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 text-lg">
                         {loading && <Loader2 size={18} className="animate-spin" />}
                         เข้าสู่ระบบ
                     </button>
                 </form>
 
                 <div className="mt-4 text-center">
-                    <a href="/register" className="text-cyan-700 font-semibold hover:underline">สมัครสมาชิกใหม่</a>
+                    <a href="/register" className="text-cyan-700 font-semibold hover:underline text-lg">สมัครสมาชิกใหม่</a>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
@@ -108,6 +108,24 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
+            {loading && (
+                <div className="login-loading-overlay">
+                    <div className="login-loading-card">
+                        <Loader2 size={36} className="login-loading-spinner" />
+                        <span className="login-loading-text">กำลังเข้าสู่ระบบ...</span>
+                        <div className="login-loading-bar">
+                            <span className="login-loading-bar-fill" />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {error && (
+                <div className="login-error-toast" role="alert">
+                    <AlertCircle size={18} className="login-toast-icon" />
+                    <span>{error}</span>
+                </div>
+            )}
         </div>
     )
 }

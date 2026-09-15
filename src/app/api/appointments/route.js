@@ -51,6 +51,16 @@ export async function POST(req) {
         include: { patient: { select: { id: true, name: true } }, doctor: { select: { id: true, name: true } } },
     })
 
+    await prisma.notification.create({
+        data: {
+            userId: doctorId,
+            appointmentId: appointment.id,
+            type: 'APPOINTMENT_CREATED',
+            title: 'มีคำขอนัดหมายใหม่',
+            message: `${appointment.patient.name} จองนัดวันที่ ${new Date(date).toLocaleDateString('th-TH')} เวลา ${time}`,
+        },
+    })
+
     return NextResponse.json(appointment, { status: 201 })
 }
 
@@ -116,6 +126,22 @@ export async function PATCH(req) {
         data: updateData,
         include: { patient: { select: { id: true, name: true } }, doctor: { select: { id: true, name: true } } },
     })
+
+    const changedStatus = updateData.status && updateData.status !== existing.status
+    const changedSchedule = date || time
+    if (changedStatus || changedSchedule) {
+        const recipientId = currentRole === 'PATIENT' ? existing.doctorId : existing.patientId
+        const statusText = updateData.status ? `สถานะเป็น ${updateData.status}` : 'มีการเปลี่ยนแปลงวันเวลานัดหมาย'
+        await prisma.notification.create({
+            data: {
+                userId: recipientId,
+                appointmentId: existing.id,
+                type: updateData.status === 'CANCELLED' ? 'APPOINTMENT_CANCELLED' : 'APPOINTMENT_UPDATED',
+                title: 'อัปเดตนัดหมาย',
+                message: `${currentRole === 'PATIENT' ? existing.patient.name : existing.doctor.name}: ${statusText}`,
+            },
+        })
+    }
 
     return NextResponse.json(updated)
 }

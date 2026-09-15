@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -40,6 +41,7 @@ const ROLE_LABELS = { PATIENT: 'ผู้ป่วย', DOCTOR: 'แพทย์
 export default function Sidebar() {
     const { data: session } = useSession()
     const pathname = usePathname()
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
     if (!session) return null
     const user = session.user
@@ -71,11 +73,47 @@ export default function Sidebar() {
                     {user.name}
                     <div className="text-xs text-white/50">{ROLE_LABELS[user.role]}</div>
                 </div>
-                <button onClick={() => signOut({ callbackUrl: '/login' })}
+                <button onClick={() => setShowLogoutConfirm(true)}
                     className="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white/80 hover:bg-white/10 text-sm transition">
                     <LogOut size={16} /> ออกจากระบบ
                 </button>
             </div>
+
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm">
+                    <div className="w-[420px] rounded-2xl border border-cyan-400/30 bg-slate-900 text-white shadow-2xl p-7">
+                        <div className="flex items-center justify-center gap-3 mb-4">
+                            <span className="inline-flex items-center justify-center h-11 w-11 rounded-full bg-cyan-500/20 text-cyan-300">
+                                <LogOut size={24} />
+                            </span>
+                            <div className="text-center">
+                                <div className="text-xs uppercase tracking-widest text-cyan-300">KueFlex</div>
+                                <div className="text-lg font-bold text-white">ออกจากระบบ</div>
+                            </div>
+                        </div>
+
+                        <div className="text-center text-sm text-slate-300 mb-6">
+                            คุณต้องการออกจากระบบหรือไม่
+                        </div>
+
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                onClick={() => setShowLogoutConfirm(false)}
+                                className="px-6 py-3 rounded-xl border border-slate-600 text-slate-200 hover:bg-white/10 transition font-bold">
+                                ยกเลิก
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowLogoutConfirm(false)
+                                    signOut({ callbackUrl: '/login' })
+                                }}
+                                className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-bold transition">
+                                ออกจากระบบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </aside>
     )
 }

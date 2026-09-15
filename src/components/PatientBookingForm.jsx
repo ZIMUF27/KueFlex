@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Calendar, Clock, FileText, Loader2, Stethoscope } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Clock, FileText, Loader2, Stethoscope } from 'lucide-react'
 
 export default function PatientBookingForm({ initialDoctorId = '' }) {
   const router = useRouter()
@@ -15,6 +15,9 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
   const [doctor, setDoctor] = useState(null)
   const [loadingDoctors, setLoadingDoctors] = useState(true)
   const [slots, setSlots] = useState([])
+  const [availability, setAvailability] = useState([])
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [visibleMonth, setVisibleMonth] = useState(new Date())
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [bookingError, setBookingError] = useState('')
   const [bookingSuccess, setBookingSuccess] = useState('')
@@ -54,6 +57,43 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
   }, [doctorId])
 
   const selectedDoctorName = useMemo(() => doctor?.name || 'แพทย์ที่เลือก', [doctor])
+  const availabilityMap = useMemo(() => new Map(availability.map(item => [item.date, item])), [availability])
+  const calendarDays = useMemo(() => {
+    const year = visibleMonth.getFullYear()
+    const month = visibleMonth.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    return Array.from({ length: firstDay + daysInMonth }, (_, index) => {
+      if (index < firstDay) return null
+      return new Date(year, month, index - firstDay + 1)
+    })
+  }, [visibleMonth])
+
+  function dateKey(date) {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
+  }
+
+  function formatDate(date) {
+    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  async function loadAvailability() {
+    if (!doctorId) return
+    const startDate = new Date().toISOString().slice(0, 10)
+    const res = await fetch('/api/schedules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getAvailability', doctorId, startDate, days: 90 }),
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    setAvailability(data)
+    const firstAvailable = data.find(item => item.available)
+    if (firstAvailable) {
+      setForm(cur => ({ ...cur, date: cur.date && availabilityMap.get(cur.date)?.available ? cur.date : firstAvailable.date }))
+      setVisibleMonth(new Date(`${firstAvailable.date}T00:00:00`))
+    }
+  }
 
   async function loadSlots(date) {
     if (!doctorId || !date) return
@@ -89,6 +129,10 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
   useEffect(() => {
     if (doctorId) loadSlots(form.date)
   }, [doctorId, form.date])
+
+  useEffect(() => {
+    loadAvailability()
+  }, [doctorId])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -186,14 +230,31 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
                     <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
                       <Calendar size={16} /> วันที่
                     </span>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().slice(0, 10)}
-                      value={form.date}
-                      onChange={(e) => setForm({ ...form, date: e.target.value })}
-                      className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-cyan-400"
-                      required
-                    />
+                    <div className="relative mt-2">
+                      <button type="button" onClick={() => setCalendarOpen(value => !value)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-left outline-none focus:ring-2 focus:ring-cyan-400">
+                        {form.date ? formatDate(new Date(`${form.date}T00:00:00`)) : 'เลือกวันที่'}
+                      </button>
+                      {calendarOpen && <div className="absolute left-0 top-full z-30 mt-2 w-full min-w-[310px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+                        <div className="flex items-center justify-between mb-3">
+                          <button type="button" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100" aria-label="เดือนก่อนหน้า"><ChevronLeft size={18} /></button>
+                          <span className="font-bold text-slate-800">{visibleMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
+                          <button type="button" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100" aria-label="เดือนถัดไป"><ChevronRight size={18} /></button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-1">
+                          {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(day => <span key={day}>{day}</span>)}
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                          {calendarDays.map((date, index) => {
+                            if (!date) return <span key={`empty-${index}`} />
+                            const key = dateKey(date)
+                            const item = availabilityMap.get(key)
+                            const enabled = item?.available
+                            return <button key={key} type="button" disabled={!enabled} title={item?.reason || 'เลือกวันที่นี้'} onClick={() => { setForm(cur => ({ ...cur, date: key, time: '' })); setCalendarOpen(false) }} className={`h-9 rounded-lg text-sm ${enabled ? 'text-slate-700 hover:bg-cyan-100' : 'cursor-not-allowed bg-slate-100 text-slate-300'} ${form.date === key ? 'bg-cyan-700 text-white hover:bg-cyan-700' : ''}`}>{date.getDate()}</button>
+                          })}
+                        </div>
+                        <div className="mt-3 text-xs text-slate-400">วันที่สีเทา: แพทย์ไม่เข้าเวรหรือคิวเต็ม</div>
+                      </div>}
+                    </div>
                   </label>
 
                   <label className="block">

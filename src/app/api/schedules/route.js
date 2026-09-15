@@ -32,6 +32,37 @@ export async function POST(req) {
 
     const body = await req.json()
 
+    if (body.action === 'getAvailability') {
+        const { doctorId, startDate, days = 90 } = body
+        const start = new Date(`${startDate}T00:00:00Z`)
+        const end = new Date(start)
+        end.setUTCDate(end.getUTCDate() + Number(days))
+        const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+        const schedules = await prisma.schedule.findMany({ where: { doctorId } })
+        const appointments = await prisma.appointment.findMany({
+            where: { doctorId, date: { gte: start, lt: end }, status: { notIn: ['CANCELLED'] } },
+            select: { date: true, time: true },
+        })
+
+        const availability = []
+        for (let index = 0; index < Number(days); index += 1) {
+            const date = new Date(start)
+            date.setUTCDate(start.getUTCDate() + index)
+            const dateKey = date.toISOString().slice(0, 10)
+            const schedule = schedules.find(item => item.day === dayNames[date.getUTCDay()])
+            const booked = appointments.filter(item => item.date.toISOString().slice(0, 10) === dateKey)
+            const slotCount = schedule
+                ? TIME_SLOTS.filter(time => time >= schedule.startTime && time < schedule.endTime).length
+                : 0
+            availability.push({
+                date: dateKey,
+                available: Boolean(schedule && booked.length < Math.min(slotCount, schedule.maxSlots)),
+                reason: !schedule ? 'แพทย์ไม่เข้าเวร' : booked.length >= Math.min(slotCount, schedule.maxSlots) ? 'คิวเต็ม' : '',
+            })
+        }
+        return NextResponse.json(availability)
+    }
+
     // If action is 'getSlots', return available slots
     if (body.action === 'getSlots') {
         const { doctorId, date } = body
