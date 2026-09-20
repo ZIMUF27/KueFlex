@@ -2,16 +2,9 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, User, UserCog, Shield, Loader2, AlertCircle } from 'lucide-react'
+import { AlertCircle, BellRing, CalendarDays, ClipboardCheck, Loader2, Search, Stethoscope } from 'lucide-react'
 
 const LOGIN_REDIRECT_DELAY_MS = 850
-
-const DEMO_ACCOUNTS = [
-    { role: 'PATIENT', label: 'ผู้ป่วย', icon: User, color: 'border-cyan-500 bg-cyan-50', email: 'somchai@mail.com' },
-    { role: 'DOCTOR', label: 'แพทย์', icon: Stethoscope, color: 'border-emerald-500 bg-emerald-50', email: 'surasak@hospital.com' },
-    { role: 'STAFF', label: 'เจ้าหน้าที่', icon: UserCog, color: 'border-amber-500 bg-amber-50', email: 'staff@hospital.com' },
-    { role: 'ADMIN', label: 'ผู้ดูแลระบบ', icon: Shield, color: 'border-red-500 bg-red-50', email: 'admin@hospital.com' },
-]
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -44,69 +37,73 @@ export default function LoginPage() {
         }
     }
 
-    const handleDemoLogin = async (account) => {
-        setLoading(true)
-        setError('')
-        const result = await signIn('credentials', {
-            email: account.email.trim().toLowerCase(),
-            password: '123456',
-            redirect: false,
-            callbackUrl: '/',
-        })
-        if (result?.error) {
-            setError('เกิดข้อผิดพลาด กรุณาตรวจสอบว่าได้ seed ฐานข้อมูลแล้ว')
-            setLoading(false)
-        } else {
-            setTimeout(() => {
-                router.push(result?.url || '/')
-                router.refresh()
-            }, LOGIN_REDIRECT_DELAY_MS)
-        }
-    }
-
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-700 via-cyan-600 to-cyan-400 px-4 py-8">
-            <div className="login-shell bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl min-h-[680px] flex flex-col justify-center">
-                <div className="text-center mb-2">
-                    <Stethoscope size={56} className="mx-auto text-cyan-600" />
-                </div>
-                <h1 className="text-4xl font-bold text-center text-cyan-800">KueFlex</h1>
-                <p className="text-center text-gray-500 mb-6 text-lg">ระบบจองนัดพบแพทย์</p>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-semibold mb-1">อีเมล</label>
-                        <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-lg"
-                            value={email} onChange={e => setEmail(e.target.value)} placeholder="กรอกอีเมล" required />
+        <div className="login-page min-h-screen flex items-center justify-center px-4 py-8">
+            <div className="login-layout w-full max-w-5xl overflow-hidden rounded-3xl shadow-2xl">
+                <section className="login-hero p-8 sm:p-10 lg:p-12 text-white">
+                    <div className="login-brand-mark mb-8">
+                        <Stethoscope size={28} />
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold mb-1">รหัสผ่าน</label>
-                        <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-lg"
-                            value={password} onChange={e => setPassword(e.target.value)} placeholder="กรอกรหัสผ่าน" required />
-                    </div>
-                    <button type="submit" disabled={loading}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 text-lg">
-                        {loading && <Loader2 size={18} className="animate-spin" />}
-                        เข้าสู่ระบบ
-                    </button>
-                </form>
+                    <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-cyan-100">ดูแลสุขภาพง่ายขึ้น</p>
+                    <h1 className="text-4xl font-bold leading-tight sm:text-5xl">KueFlex</h1>
+                    <p className="mt-4 max-w-md text-lg leading-relaxed text-cyan-50">
+                        ระบบจองนัดพบแพทย์ออนไลน์ที่ช่วยให้คุณจัดการทุกนัดหมายได้ในที่เดียว
+                    </p>
 
-                <div className="mt-4 text-center">
-                    <a href="/register" className="text-cyan-700 font-semibold hover:underline text-lg">สมัครสมาชิกใหม่</a>
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                    <p className="text-xs text-gray-400 text-center mb-3">Demo Login (รหัสผ่าน: 123456)</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        {DEMO_ACCOUNTS.map(acc => (
-                            <button key={acc.role} onClick={() => handleDemoLogin(acc)} disabled={loading}
-                                className={`p-3 rounded-lg border-2 text-center transition hover:shadow-md disabled:opacity-50 ${acc.color}`}>
-                                <acc.icon size={20} className="mx-auto mb-1" />
-                                <div className="text-xs font-semibold">{acc.label}</div>
-                            </button>
+                    <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {[
+                            { icon: Search, title: 'ค้นหาแพทย์', text: 'เลือกตามแผนกและความเชี่ยวชาญ' },
+                            { icon: CalendarDays, title: 'จองคิวออนไลน์', text: 'เลือกวันและเวลาที่สะดวก' },
+                            { icon: BellRing, title: 'ไม่พลาดทุกนัด', text: 'รับการแจ้งเตือนก่อนถึงวันนัด' },
+                            { icon: ClipboardCheck, title: 'จัดการนัดหมาย', text: 'ดู เลื่อน หรือยกเลิกนัดได้ง่าย' },
+                        ].map(({ icon: Icon, title, text }) => (
+                            <div key={title} className="login-feature">
+                                <Icon size={22} className="shrink-0 text-cyan-200" />
+                                <div>
+                                    <p className="font-bold">{title}</p>
+                                    <p className="mt-1 text-sm text-cyan-100">{text}</p>
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
+
+                    <p className="mt-9 border-t border-white/20 pt-5 text-sm text-cyan-100">
+                        เริ่มต้นใช้งาน: เข้าสู่ระบบ เลือกแพทย์ เลือกเวลา และยืนยันการนัดหมาย
+                    </p>
+                </section>
+
+                <section className="login-card bg-white p-8 sm:p-10 lg:p-12">
+                    <div className="mb-8 text-center">
+                        <div className="mb-4 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600">
+                            <Stethoscope size={34} />
+                        </div>
+                        <h2 className="text-3xl font-bold text-cyan-800">เข้าสู่ระบบ</h2>
+                        <p className="mt-2 text-gray-500">ยินดีต้อนรับกลับสู่ KueFlex</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="mb-1 block text-sm font-semibold">อีเมล</label>
+                            <input type="email" className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                value={email} onChange={e => setEmail(e.target.value)} placeholder="กรอกอีเมล" required />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-sm font-semibold">รหัสผ่าน</label>
+                            <input type="password" className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                value={password} onChange={e => setPassword(e.target.value)} placeholder="กรอกรหัสผ่าน" required />
+                        </div>
+                        <button type="submit" disabled={loading}
+                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 py-3 text-lg font-semibold text-white transition hover:bg-cyan-700 disabled:opacity-50">
+                            {loading && <Loader2 size={18} className="animate-spin" />}
+                            เข้าสู่ระบบ
+                        </button>
+                    </form>
+
+                    <div className="mt-6 text-center">
+                        <span className="text-gray-500">ยังไม่มีบัญชีใช่ไหม? </span>
+                        <a href="/register" className="font-semibold text-cyan-700 hover:underline">สมัครสมาชิกใหม่</a>
+                    </div>
+                </section>
             </div>
             {loading && (
                 <div className="login-loading-overlay">

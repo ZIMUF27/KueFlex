@@ -211,7 +211,7 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
             กำลังโหลดแพทย์...
           </div>
         ) : doctor ? (
-          <div className="grid lg:grid-cols-[1fr_420px] gap-6">
+          <div className="grid lg:grid-cols-[1fr_420px] gap-6 motion-fade-up">
             <section className="rounded-3xl bg-white shadow-sm border border-slate-100 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-14 w-14 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center">
@@ -231,10 +231,10 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
                       <Calendar size={16} /> วันที่
                     </span>
                     <div className="relative mt-2">
-                      <button type="button" onClick={() => setCalendarOpen(value => !value)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-left outline-none focus:ring-2 focus:ring-cyan-400">
+                      <button type="button" onClick={() => setCalendarOpen(value => !value)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-left outline-none hover:border-cyan-400 focus:ring-2 focus:ring-cyan-400">
                         {form.date ? formatDate(new Date(`${form.date}T00:00:00`)) : 'เลือกวันที่'}
                       </button>
-                      {calendarOpen && <div className="absolute left-0 top-full z-30 mt-2 w-full min-w-[310px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+                      {calendarOpen && <div className="motion-panel absolute left-0 top-full z-30 mt-2 w-full min-w-[310px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
                         <div className="flex items-center justify-between mb-3">
                           <button type="button" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100" aria-label="เดือนก่อนหน้า"><ChevronLeft size={18} /></button>
                           <span className="font-bold text-slate-800">{visibleMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
@@ -249,7 +249,7 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
                             const key = dateKey(date)
                             const item = availabilityMap.get(key)
                             const enabled = item?.available
-                            return <button key={key} type="button" disabled={!enabled} title={item?.reason || 'เลือกวันที่นี้'} onClick={() => { setForm(cur => ({ ...cur, date: key, time: '' })); setCalendarOpen(false) }} className={`h-9 rounded-lg text-sm ${enabled ? 'text-slate-700 hover:bg-cyan-100' : 'cursor-not-allowed bg-slate-100 text-slate-300'} ${form.date === key ? 'bg-cyan-700 text-white hover:bg-cyan-700' : ''}`}>{date.getDate()}</button>
+                            return <button key={key} type="button" disabled={!enabled} title={item?.reason || 'เลือกวันที่นี้'} onClick={() => { setForm(cur => ({ ...cur, date: key, time: '' })); setCalendarOpen(false) }} className={`h-9 rounded-lg text-sm ${enabled ? 'text-slate-700 hover:bg-cyan-100' : 'cursor-not-allowed bg-slate-100 text-slate-300'} ${form.date === key ? 'motion-pop bg-cyan-700 text-white hover:bg-cyan-700' : ''}`}>{date.getDate()}</button>
                           })}
                         </div>
                         <div className="mt-3 text-xs text-slate-400">วันที่สีเทา: แพทย์ไม่เข้าเวรหรือคิวเต็ม</div>
@@ -270,7 +270,7 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
                         <select
                           value={form.time}
                           onChange={(e) => setForm({ ...form, time: e.target.value })}
-                          className="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-cyan-400"
+                          className={`w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-cyan-400 ${form.time ? 'motion-pop' : ''}`}
                           required
                         >
                           <option value="">เลือกเวลา</option>
@@ -300,7 +300,7 @@ export default function PatientBookingForm({ initialDoctorId = '' }) {
                 </label>
 
                 <div className="flex items-center gap-3 pt-3">
-                  <button type="submit" disabled={submitting || loadingSlots} className="rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-bold px-6 py-3 disabled:opacity-60">
+                  <button type="submit" disabled={submitting || loadingSlots} className="rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-bold px-6 py-3 shadow-sm hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60">
                     {submitting ? <><Loader2 size={16} className="animate-spin mr-2 inline" /> กำลังยืนยัน...</> : 'ยืนยันการจองนัด'}
                   </button>
                   <button type="button" onClick={() => router.push('/patient/booking/select-doctor')} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">

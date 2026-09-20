@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { UserRoundPlus } from 'lucide-react'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -61,7 +62,9 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-700 via-cyan-600 to-cyan-400">
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
         <div className="text-center">
-          <div className="text-5xl mb-2">👩‍⚕️</div>
+          <div className="mx-auto mb-3 inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-600 shadow-sm">
+            <UserRoundPlus size={42} strokeWidth={2.2} />
+          </div>
           <h1 className="text-2xl font-bold text-cyan-800">สมัครสมาชิก KueFlex</h1>
           <p className="text-gray-500 mt-2">กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้</p>
         </div>

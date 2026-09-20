@@ -86,7 +86,7 @@ export default function PatientAppointmentsPage() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="motion-success rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -101,7 +101,7 @@ export default function PatientAppointmentsPage() {
             ยังไม่มีรายการนัดหมาย
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 motion-fade-up">
             {appointments.map((item) => (
               <article key={item.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
                 <div className="flex items-center justify-between gap-4">
@@ -147,7 +147,7 @@ export default function PatientAppointmentsPage() {
                 )}
 
                 {cancelingId === item.id && (
-                  <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4">
+                  <div className="motion-panel mt-4 rounded-2xl border border-red-100 bg-red-50 p-4">
                     <div className="text-sm font-bold text-red-700 mb-2">แนบหมายเหตุเพื่อยกเลิกการนัด</div>
                     <textarea
                       value={cancelNote}
